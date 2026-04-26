@@ -1,0 +1,1123 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PromptOS – Prompt Engineering Hub</title>
+  <meta name="description" content="Aggregatore professionale di tecniche di prompt engineering per LLM e modelli generativi.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <!-- Outfit per tutti i testi, JetBrains Mono per la status‑bar -->
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+/* ---------- ROOT VARIABLES (FAKTOTUM) ---------- */
+:root {
+  --bg: #FFFFFF;
+  --bg-soft: #F8F9FA;
+  --bg-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  --text-primary: #1A0B2E;
+  --text-secondary: #4A3A5C;
+  --text-light: #6B5A7D;
+  --accent-lime: #abfa0f;
+  --accent-lime-soft: #f5ffe0;
+  --accent-lime-glow: rgba(171,250,15,0.3);
+  --accent-lime-dark: #8cc408;
+  --accent-purple: #764ba2;
+  --accent-blue: #667eea;
+  --border: #E5E1EB;
+  --border-light: #F0EBF5;
+  --radius: 16px;
+  --radius-sm: 10px;
+  --radius-lg: 24px;
+  --transition: all .3s cubic-bezier(.4,0,.2,1);
+  --shadow-sm: 0 2px 8px rgba(26,11,46,.04);
+  --shadow-md: 0 8px 30px rgba(26,11,46,.08);
+  --shadow-lg: 0 20px 60px rgba(26,11,46,.12);
+  --shadow-hover: 0 12px 40px rgba(102,126,234,.15);
+  --font-heading: 'Outfit', sans-serif;
+  --font-body: 'Outfit', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+}
+
+/* ---------- GLOBAL RESET ----------
+*/
+*, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
+html { scroll-behavior:smooth; }
+body {
+  font-family: var(--font-body);
+  background: var(--bg);
+  color: var(--text-primary);
+  line-height:1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ---------- TYPOGRAPHY ----------
+*/
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-heading);
+  font-weight:700;
+}
+h1 { font-size:2.8rem; margin-bottom:.8rem; }
+h2 { font-size:2.2rem; margin-bottom:.6rem; }
+h3 { font-size:1.5rem; margin-bottom:.5rem; }
+p { margin-bottom:1rem; color:var(--text-secondary); }
+
+/* ---------- COMPONENTS ----------
+*/
+a { color:var(--accent-lime-dark); text-decoration:none; }
+a:hover { text-decoration:underline; }
+
+/* ----- TOPBAR ----- */
+#topbar {
+  position:fixed; top:0; left:0; right:0; height:56px;
+  display:flex; align-items:center; justify-content:space-between;
+  padding:0 1rem; background:rgba(255,255,255,.95);
+  backdrop-filter:blur(16px);
+  border-bottom:1px solid var(--border-light);
+  z-index:1000;
+  transition:var(--transition);
+}
+#topbar.scrolled { box-shadow:var(--shadow-sm); }
+.logo {
+  display:flex; align-items:center; gap:.5rem;
+  font-size:1.4rem; font-weight:600; color:var(--text-primary);
+}
+.logo svg { width:28px; height:28px; fill:var(--accent-lime-dark); }
+
+/* Nav (scrollable) */
+#nav {
+  display:flex; overflow-x:auto; gap:1.5rem; scrollbar-width:none;
+}
+#nav::-webkit-scrollbar { display:none; }
+.nav-item {
+  position:relative; padding:.3rem 0;
+  font-family:var(--font-heading); font-weight:600; color:var(--text-secondary);
+  cursor:pointer; white-space:nowrap;
+}
+.nav-item.active { color:var(--accent-lime-dark); }
+.nav-item.active::after {
+  content:''; position:absolute; bottom:-4px; left:0; right:0;
+  height:2px; background:var(--accent-lime);
+  box-shadow:0 0 6px var(--accent-lime-glow);
+}
+
+/* Settings badge (gear) */
+#settingsBtn {
+  background:none; border:none; cursor:pointer; padding:.2rem;
+}
+#settingsBtn svg { width:22px; height:22px; fill:var(--text-secondary); }
+#settingsBtn:hover svg { fill:var(--accent-lime-dark); }
+
+/* ----- SIDEBAR ----- */
+#sidebar {
+  position:sticky; top:56px; left:0; width:260px; height:calc(100vh - 56px - 28px);
+  background:rgba(255,255,255,.75); backdrop-filter:blur(16px);
+  border-right:1px solid var(--border-light);
+  padding:1rem; overflow-y:auto;
+}
+.filter-group { margin-bottom:1.5rem; }
+.filter-group h4 { font-size:1rem; margin-bottom:.4rem; color:var(--text-primary); }
+.filter-group label { display:flex; align-items:center; gap:.4rem; margin-bottom:.3rem; cursor:pointer; }
+.filter-group input[type="checkbox"] { width:16px; height:16px; }
+
+/* ----- MAIN CONTENT ----- */
+#main {
+  flex:1; padding:1rem; overflow-y:auto;
+}
+.view { display:none; }
+.view.active { display:block; }
+
+/* ----- CARD (generic) ----- */
+.card {
+  background:var(--bg); border:1px solid var(--border-light);
+  border-radius:var(--radius); padding:1rem; box-shadow:var(--shadow-sm);
+  transition:var(--transition);
+  position:relative; overflow:hidden;
+}
+.card:hover {
+  transform:translateY(-4px);
+  box-shadow:var(--shadow-hover);
+  border-color:var(--accent-lime);
+}
+.card-header { display:flex; justify-content:space-between; align-items:center; }
+.card-header h3 { margin:0; font-size:1.2rem; }
+.tag {
+  display:inline-block; padding:.2rem .5rem; border-radius:12px;
+  font-size:.75rem; font-weight:600; margin-right:.4rem;
+}
+.tag.ragionamento { background:rgba(171,250,15,.12); color:var(--accent-lime-dark); }
+.tag.struttura   { background:rgba(102,126,234,.12); color:var(--accent-blue); }
+.tag.output      { background:rgba(118,74,162,.12); color:var(--accent-purple); }
+.tag.contesto    { background:rgba(171,250,15,.12); color:var(--accent-lime-dark); }
+.tag.agente      { background:rgba(171,250,15,.12); color:var(--accent-lime-dark); }
+.tag.immagine    { background:rgba(171,250,15,.12); color:var(--accent-lime-dark); }
+.tag.video       { background:rgba(171,250,15,.12); color:var(--accent-lime-dark); }
+.tag.audio       { background:rgba(171,250,15,.12); color:var(--accent-lime-dark); }
+
+.diff-badge {
+  display:inline-block; padding:.2rem .5rem; border-radius:12px;
+  font-size:.75rem; font-weight:600;
+}
+.diff-badge.base { background:#e0f7fa; color:#006064; }
+.diff-badge.intermedio { background:#fff9c4; color:#ff8f00; }
+.diff-badge.avanzato { background:#ffebee; color:#b71c1c; }
+
+/* Favourite ★ */
+.fav-btn {
+  background:none; border:none; cursor:pointer;
+  width:24px; height:24px;
+}
+.fav-btn svg { width:100%; height:100%; fill:#bbb; transition:var(--transition); }
+.fav-btn.fav svg { fill:#ffb400; transform:scale(1.2); }
+
+/* ----- STATUS BAR ----- */
+#statusbar {
+  position:fixed; bottom:0; left:0; right:0; height:28px;
+  background:rgba(255,255,255,.95); backdrop-filter:blur(16px);
+  border-top:1px solid var(--border-light);
+  display:flex; align-items:center; justify-content:center;
+  font-family:var(--font-mono); font-size:.75rem; color:var(--text-secondary);
+}
+
+/* ----- MODALS (glass) ----- */
+.modal-overlay {
+  position:fixed; inset:0; background:rgba(0,0,0,.4);
+  display:flex; align-items:center; justify-content:center;
+  opacity:0; visibility:hidden; transition:opacity .2s;
+  z-index:2000;
+}
+.modal-overlay.active { opacity:1; visibility:visible; }
+.modal {
+  background:rgba(255,255,255,.3); backdrop-filter:blur(16px);
+  border:1px solid var(--border-light); border-radius:var(--radius);
+  padding:1.5rem; width:90%; max-width:420px;
+  box-shadow:var(--shadow-lg);
+}
+.modal h3 { margin-bottom:.8rem; }
+.modal .close-btn {
+  background:none; border:none; cursor:pointer; position:absolute;
+  top:1rem; right:1rem; width:24px; height:24px;
+}
+.modal .close-btn svg { fill:var(--text-secondary); }
+.modal .close-btn:hover svg { fill:var(--accent-lime-dark); }
+
+/* ----- BUILDER / ADVISOR / CONFRONTO INPUTS ----- */
+.field-group { margin-bottom:1rem; }
+.field-group label { display:block; margin-bottom:.3rem; font-weight:600; }
+.field-group select,
+.field-group textarea,
+.field-group input[type="text"] {
+  width:100%; padding:.5rem; border:1px solid var(--border);
+  border-radius:var(--radius-sm); font-family:var(--font-body);
+  background:var(--bg); transition:var(--transition);
+}
+.field-group select:focus,
+.field-group textarea:focus,
+.field-group input:focus { outline:none; border-color:var(--accent-lime); box-shadow:0 0 0 3px var(--accent-lime-glow); }
+
+/* Technique pills */
+.tech-pill {
+  display:inline-block; padding:.3rem .6rem; margin:.2rem;
+  border:1px solid var(--border); border-radius:var(--radius-sm);
+  background:var(--bg-soft); cursor:pointer; font-size:.85rem;
+}
+.tech-pill.selected {
+  background:var(--accent-lime); color:#000;
+  border-color:var(--accent-lime-dark);
+}
+
+/* ----- BUTTONS ----- */
+.btn {
+  display:inline-flex; align-items:center; justify-content:center;
+  padding:.6rem 1.2rem; border:none; border-radius:var(--radius-sm);
+  font-weight:600; cursor:pointer; transition:var(--transition);
+  font-family:var(--font-heading);
+}
+.btn-primary {
+  background:var(--accent-lime); color:#000;
+}
+.btn-primary:hover {
+  background:var(--accent-lime-dark); color:#fff;
+  box-shadow:0 0 0 4px var(--accent-lime-glow);
+}
+.btn-outline {
+  background:transparent; color:var(--accent-lime-dark);
+  border:2px solid var(--accent-lime);
+}
+.btn-outline:hover {
+  background:var(--accent-lime-soft);
+}
+
+/* ----- LOADER SHIMMER (confronto) ----- */
+.shimmer {
+  background:linear-gradient(90deg, var(--bg-soft) 0%, var(--bg) 50%, var(--bg-soft) 100%);
+  background-size:200% 100%; animation:shimmer 1.5s infinite;
+}
+@keyframes shimmer { to { background-position:-200% 0; } }
+
+/* ----- RESPONSIVE (mobile) ----- */
+@media (max-width:900px) {
+  #sidebar { display:none; }
+  #mobileMenuBtn { display:flex; flex-direction:column; gap:5px; background:none; border:none; cursor:pointer; }
+  #mobileMenuBtn span { width:24px; height:2px; background:var(--text-primary); transition:var(--transition); }
+  #mobileMenuBtn.active span:nth-child(1){ transform:rotate(45deg) translate(5px,5px); }
+  #mobileMenuBtn.active span:nth-child(2){ opacity:0; }
+  #mobileMenuBtn.active span:nth-child(3){ transform:rotate(-45deg) translate(5px,-5px); }
+  #nav { display:none; flex-direction:column; background:var(--bg); position:absolute; top:56px; left:0; right:0; padding:1rem; border-bottom:1px solid var(--border-light); }
+  #nav.active { display:flex; }
+}
+
+/* ----- PRINT ----------
+*/
+@media print{
+  #topbar, #sidebar, #statusbar, .modal-overlay, #mobileMenuBtn { display:none; }
+  .card { break-inside:avoid; }
+}
+
+/* Grid utilities */
+.grid { display:grid; gap:1rem; }
+.grid-2 { grid-template-columns:repeat(2,1fr); }
+.grid-3 { grid-template-columns:repeat(3,1fr); }
+@media (max-width:768px){
+  .grid-2, .grid-3 { grid-template-columns:1fr; }
+}
+
+/* Code block */
+.code-block { background:#111; color:#eee; padding:1rem; border-radius:var(--radius-sm); min-height:180px; white-space:pre-wrap; overflow-x:auto; }
+  </style>
+</head>
+<body>
+  <!-- ==================== TOPBAR ==================== -->
+  <header id="topbar">
+    <div class="logo">
+      <!-- P² SVG -->
+      <svg viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="45" stroke="var(--accent-lime-dark)" stroke-width="5" fill="none"/><text x="50%" y="55%" dominant-baseline="middle" text-anchor="middle" font-size="50" fill="var(--accent-lime-dark)" font-family="var(--font-heading)">P²</text></svg>
+      PromptOS
+    </div>
+
+    <nav id="nav">
+      <div class="nav-item active" data-view="libreria">Libreria</div>
+      <div class="nav-item" data-view="builder">Builder</div>
+      <div class="nav-item" data-view="advisor">LLM Advisor</div>
+      <div class="nav-item" data-view="confronto">Confronto</div>
+      <div class="nav-item" data-view="analizzatore">Analizzatore</div>
+      <div class="nav-item" data-view="academy">Academy</div>
+      <div class="nav-item" data-view="preferiti">⭐ Salvati</div>
+    </nav>
+
+    <button id="settingsBtn" aria-label="Impostazioni">
+      <!-- Gear SVG -->
+      <svg viewBox="0 0 24 24"><path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7zm7.43-2.53l1.77-1.03-1.5-2.6-2.06.5a6.96 6.96 0 0 0-1.3-.8l-.31-2.19-2.84-.01-.31 2.19c-.45.2-.86.46-1.26.79l-2.06-.5-1.5 2.6 1.77 1.03c-.02.16-.02.33-.02.5s0 .34.02.5l-1.77 1.03 1.5 2.6 2.06-.5c.4.33.81.59 1.26.79l.31 2.19 2.84.01.31-2.19c.46-.2.87-.46 1.3-.79l2.06.5 1.5-2.6-1.77-1.03c.02-.16.02-.33.02-.5s0-.34-.02-.5z"/></svg>
+    </button>
+
+    <!-- Mobile hamburger -->
+    <button id="mobileMenuBtn" class="mobile-menu-btn" aria-label="Menu">
+      <span></span><span></span><span></span>
+    </button>
+  </header>
+
+  <!-- ==================== LAYOUT ==================== -->
+  <div style="display:flex; margin-top:56px; min-height:calc(100vh - 56px - 28px);">
+    <!-- ======== SIDEBAR ======== -->
+    <aside id="sidebar">
+      <div class="filter-group">
+        <h4>Categoria</h4>
+        <label><input type="checkbox" data-filter="category" value="ragionamento"> Ragionamento</label>
+        <label><input type="checkbox" data-filter="category" value="struttura"> Struttura</label>
+        <label><input type="checkbox" data-filter="category" value="output"> Output</label>
+        <label><input type="checkbox" data-filter="category" value="contesto"> Contesto</label>
+        <label><input type="checkbox" data-filter="category" value="agente"> Agente</label>
+        <label><input type="checkbox" data-filter="category" value="immagine"> Immagine</label>
+        <label><input type="checkbox" data-filter="category" value="video"> Video</label>
+        <label><input type="checkbox" data-filter="category" value="audio"> Audio</label>
+      </div>
+      <div class="filter-group">
+        <h4>Difficoltà</h4>
+        <label><input type="checkbox" data-filter="difficulty" value="base"> Base</label>
+        <label><input type="checkbox" data-filter="difficulty" value="intermedio"> Intermedio</label>
+        <label><input type="checkbox" data-filter="difficulty" value="avanzato"> Avanzato</label>
+      </div>
+      <div class="filter-group">
+        <h4>LLM / Modello</h4>
+        <label><input type="checkbox" data-filter="llm" value="Claude"> Claude</label>
+        <label><input type="checkbox" data-filter="llm" value="GPT-4o"> GPT‑4o</label>
+        <label><input type="checkbox" data-filter="llm" value="Gemini"> Gemini</label>
+        <label><input type="checkbox" data-filter="llm" value="Llama"> Llama</label>
+        <label><input type="checkbox" data-filter="llm" value="Mistral"> Mistral</label>
+        <label><input type="checkbox" data-filter="llm" value="Groq"> Groq</label>
+      </div>
+    </aside>
+
+    <!-- ======== MAIN CONTENT ======== -->
+    <main id="main">
+      <!-- ---- LIBRERIA (default) ---- -->
+      <section id="view-libreria" class="view active">
+        <div class="card">
+          <div class="card-header">
+            <h3>Libreria – Tecniche di Prompt Engineering</h3>
+            <div>
+              <input type="text" id="searchInput" placeholder="Cerca tecnica…" style="padding:.4rem .6rem; border:1px solid var(--border); border-radius:var(--radius-sm);">
+            </div>
+          </div>
+          <div id="techList" class="grid grid-2" style="margin-top:1rem;"></div>
+        </div>
+      </section>
+
+      <!-- ---- BUILDER ---- -->
+      <section id="view-builder" class="view">
+        <div class="grid grid-2">
+          <div class="card">
+            <h3>Builder – Genera il tuo Prompt</h3>
+            <div class="field-group">
+              <label for="builderOutputType">Tipo output</label>
+              <select id="builderOutputType">
+                <option value="testo">Testo</option>
+                <option value="immagine">Immagine</option>
+                <option value="video">Video</option>
+                <option value="audio">Audio</option>
+              </select>
+            </div>
+            <div class="field-group">
+              <label for="builderModel">Modello target</label>
+              <select id="builderModel"></select>
+            </div>
+            <div class="field-group">
+              <label for="builderTask">Task / Descrizione</label>
+              <textarea id="builderTask" rows="4" placeholder="Es: “Scrivi una e‑mail di seguito‑costo per un cliente X …”></textarea>
+            </div>
+            <div class="field-group">
+              <label>Tech‑pill (seleziona)</label>
+              <div id="builderTechPills"></div>
+            </div>
+            <button class="btn btn-primary" id="builderRunBtn">Genera Prompt</button>
+          </div>
+
+          <div class="card">
+            <h3>Output Prompt</h3>
+            <pre id="builderResult" class="code-block" style="background:#111;color:#eee;padding:1rem;border-radius:var(--radius-sm);min-height:180px;white-space:pre-wrap;"></pre>
+            <button class="btn btn-outline" id="copyPromptBtn">Copia</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ---- LLM ADVISOR ---- -->
+      <section id="view-advisor" class="view">
+        <div class="grid grid-2">
+          <div class="card">
+            <h3>LLM Advisor – Raccomandazione Modello</h3>
+            <div class="field-group">
+              <label for="advCategory">Categoria</label>
+              <select id="advCategory">
+                <option value="ragionamento">Ragionamento</option>
+                <option value="codice">Codice</option>
+                <option value="scrittura">Scrittura</option>
+                <option value="analisi">Analisi</option>
+                <option value="matematica">Matematica</option>
+                <option value="multilingual">Multilingua</option>
+                <option value="ricerca">Ricerca</option>
+                <option value="immagine">Immagine</option>
+                <option value="video">Video</option>
+                <option value="audio">Audio</option>
+                <option value="tts">TTS</option>
+                <option value="multimodale">Multimodale</option>
+                <option value="agente">Agente</option>
+              </select>
+            </div>
+            <div class="field-group">
+              <label for="advPriority">Priorità</label>
+              <select id="advPriority">
+                <option value="qualità">Qualità</option>
+                <option value="velocità">Velocità</option>
+                <option value="costo">Costo</option>
+                <option value="privacy">Privacy</option>
+                <option value="creatività">Creatività</option>
+              </select>
+            </div>
+            <div class="field-group">
+              <label for="advDesc">Descrizione</label>
+              <textarea id="advDesc" rows="4" placeholder="Descrivi il tuo caso d’uso…"></textarea>
+            </div>
+            <button class="btn btn-primary" id="advRunBtn">Richiedi Consiglio</button>
+          </div>
+
+          <div class="card" id="advisorResultContainer" style="display:none;">
+            <h3>Raccomandazione</h3>
+            <div id="advisorRecommendation" style="margin-bottom:1rem;"></div>
+            <div id="advisorScores" style="display:flex;gap:.5rem;flex-wrap:wrap;"></div>
+            <div id="advisorAlternatives" style="margin-top:1rem;"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ---- CONFRONTO ---- -->
+      <section id="view-confronto" class="view">
+        <div class="card">
+          <h3>Confronto Modelli</h3>
+          <div class="field-group">
+            <label for="confPrompt">Prompt da confrontare</label>
+            <textarea id="confPrompt" rows="3" placeholder="Inserisci il prompt…"></textarea>
+          </div>
+          <div class="field-group">
+            <label>Seleziona Modelli</label>
+            <div id="confModelChips" style="display:flex;gap:.5rem;flex-wrap:wrap;"></div>
+          </div>
+          <button class="btn btn-primary" id="confRunBtn">Confronta</button>
+        </div>
+
+        <div id="confResultsGrid" class="grid grid-2" style="gap:1rem;margin-top:1rem;"></div>
+      </section>
+
+      <!-- ---- ANALIZZATORE ---- -->
+      <section id="view-analizzatore" class="view">
+        <div class="grid grid-2">
+          <div class="card">
+            <h3>Analizzatore Prompt</h3>
+            <div class="field-group">
+              <label for="analyzePrompt">Prompt da analizzare</label>
+              <textarea id="analyzePrompt" rows="5" placeholder="Inserisci il prompt..."></textarea>
+            </div>
+            <button class="btn btn-primary" id="analyzeRunBtn">Analizza</button>
+          </div>
+
+          <div class="card" id="analysisResult" style="display:none;">
+            <h3>Risultati Analisi</h3>
+            <div id="analysisMetrics" style="display:grid;grid-template-columns:repeat(2,1fr);gap:.5rem;"></div>
+            <div id="analysisFeedback" style="margin-top:1rem;"></div>
+            <h4>Prompt Migliorato</h4>
+            <pre id="improvedPrompt" class="code-block" style="background:#111;color:#eee;padding:1rem;border-radius:var(--radius-sm);white-space:pre-wrap;"></pre>
+            <button class="btn btn-outline" id="copyImprovedBtn">Copia Prompt</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ---- ACADEMY ---- -->
+      <section id="view-academy" class="view">
+        <div class="grid grid-3">
+          <!-- Papers -->
+          <div class="card">
+            <h3>Paper</h3>
+            <ul style="list-style:none; padding-left:0;">
+              <li><strong>Wei 2022</strong> – “Chain‑of‑Thought Prompting”</li>
+              <li><strong>Yao 2023</strong> – “Tree‑of‑Thought Prompting”</li>
+              <li><strong>Schulhoff 2024</strong> – “The Prompt Report (58 tecniche)”</li>
+              <li><strong>Anthropic Docs</strong> – “Claude 4.x Documentation”</li>
+              <li><strong>Rombach 2025</strong> – “Image Prompting Advances”</li>
+              <li><strong>ACM UMAP 2025</strong> – “Audio/Video Prompting”</li>
+            </ul>
+          </div>
+
+          <!-- Lessons -->
+          <div class="card">
+            <h3>Curriculum – Lesson Card</h3>
+            <div id="lessonList">
+              <!-- Le lesson saranno generate via JS -->
+            </div>
+          </div>
+
+          <!-- Insight box (static) -->
+          <div class="card" style="background:var(--accent-purple); color:#fff;">
+            <h3>Insight</h3>
+            <p>Le tecniche di prompt engineering sono evolutive: le più vecchie (CoT) sono la base, le più recenti (Self‑Consistency, RAG) ottimizzano coerenza e contesto.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- ---- PREFERITI ---- -->
+      <section id="view-preferiti" class="view">
+        <div class="card">
+          <h3>Le tue tecniche preferite</h3>
+          <div id="favGrid" class="grid grid-2"></div>
+          <p id="emptyFavMsg" style="text-align:center;margin-top:1rem;color:var(--text-secondary);display:none;">Nessun preferito salvato.</p>
+          <button class="btn btn-outline" id="exportFavBtn">Export collezione</button>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- ==================== STATUS BAR ==================== -->
+  <footer id="statusbar">
+    <span>PromptOS | v1.0 | FAV: <span id="favCount">0</span></span>
+  </footer>
+
+  <!-- ==================== SETTINGS MODAL ==================== -->
+  <div class="modal-overlay" id="settingsOverlay">
+    <div class="modal">
+      <button class="close-btn" id="closeSettings">
+        <svg viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+      <h3>Impostazioni PromptOS</h3>
+      <div class="field-group">
+        <label for="apiKeyInput">Anthropic API Key</label>
+        <input type="password" id="apiKeyInput" placeholder="sk‑…">
+      </div>
+      <div class="field-group">
+        <label><input type="checkbox" id="demoModeToggle"> Modalità Demo (usa dati mockati)</label>
+      </div>
+      <button class="btn btn-primary" id="saveSettingsBtn">Salva</button>
+    </div>
+  </div>
+
+  <!-- ==================== EXPORT MODAL ==================== -->
+  <div class="modal-overlay" id="exportOverlay">
+    <div class="modal">
+      <button class="close-btn" id="closeExport">
+        <svg viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+      <h3>Esporta preferiti</h3>
+      <div class="field-group">
+        <label>Formato</label>
+        <select id="exportFormat">
+          <option value="md">Markdown (.md)</option>
+          <option value="json">JSON</option>
+          <option value="txt">Plain Text (.txt)</option>
+        </select>
+      </div>
+      <button class="btn btn-primary" id="doExportBtn">Esporta</button>
+    </div>
+  </div>
+
+  <!-- ==================== JAVASCRIPT ==================== -->
+  <script>
+/* ==================== GLOBAL STATE ==================== */
+const state = {
+  favs: new Set(JSON.parse(localStorage.getItem('p2_favs')||'[]')),
+  apiKey: localStorage.getItem('p2_apiKey')||'',
+  demoMode: (localStorage.getItem('p2_demo')||'true') === 'true',
+  filters: {
+    category: new Set(),
+    difficulty: new Set(),
+    llm: new Set()
+  },
+  currentView: 'libreria'
+};
+
+/* ==================== UTILS ==================== */
+function escHTML(str){ return String(str).replace(/[&<>"']/g, m=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
+function $(sel){ return document.querySelector(sel); }
+function $$(sel){ return document.querySelectorAll(sel); }
+
+/* ==================== MOCK DATA ==================== */
+const mockTechniques = [
+  {id:'t01', num:1, title:'Zero-Shot Prompting', categories:['struttura'], difficulty:'base', llms:['Claude','GPT-4o','Gemini','Llama','Mistral'], summary:'Prompt senza esempi, si affida alla conoscenza pre-addestrata.', details:{cosa:'Tecnica base senza esempi', quando:'Task semplici', template:'[Istruzione]', tips:'Sii chiaro', source:'Brown 2020'}},
+  {id:'t02', num:2, title:'Few-Shot Prompting', categories:['struttura'], difficulty:'base', llms:['Claude','GPT-4o','Gemini','Llama','Mistral'], summary:'Fornisci 2-5 esempi input/output.', details:{cosa:'Include esempi', quando:'Formato specifico', template:'Es1: A->B\nEs2: C->D\n[Task]', tips:'Esempi pertinenti', source:'Brown 2020'}},
+  {id:'t03', num:3, title:'Chain-of-Thought (CoT)', categories:['ragionamento'], difficulty:'intermedio', llms:['Claude','GPT-4o','Gemini'], summary:'Induce ragionamento passo dopo passo.', details:{cosa:'Aggiungi "Let\'s think step by step"', quando:'Problemi logici', template:'[Prompt]\nLet\'s think step by step:', tips:'Aumenta precisione', source:'Wei 2022'}},
+  {id:'t04', num:4, title:'Self-Consistency', categories:['ragionamento'], difficulty:'avanzato', llms:['Claude','GPT-4o'], summary:'Genera più catene e prendi la risposta comune.', details:{cosa:'Multiple CoT', quando:'Alta precisione', template:'[Prompt]\nGenera 5 ragionamenti diversi', tips:'Riduce allucinazioni', source:'Wang 2022'}},
+  {id:'t05', num:5, title:'Tree-of-Thought (ToT)', categories:['ragionamento'], difficulty:'avanzato', llms:['Claude','GPT-4o'], summary:'Esplora percorsi di ragionamento ad albero.', details:{cosa:'Albero di passaggi', quando:'Pianificazione', template:'[Prompt]\nEsplora nodi e scegli percorso', tips:'Richiede token', source:'Yao 2023'}},
+  {id:'t06', num:6, title:'Graph-of-Thought (GoT)', categories:['ragionamento'], difficulty:'avanzato', llms:['Claude','GPT-4o'], summary:'Ragionamento come grafo diretto.', details:{cosa:'Estende ToT con cicli', quando:'Dipendenze non lineari', template:'[Prompt]\nRappresenta come grafo', tips:'Per task complessi', source:'Besta 2023'}},
+  {id:'t07', num:7, title:'Least-to-Most Prompting', categories:['ragionamento'], difficulty:'intermedio', llms:['Claude','GPT-4o','Gemini'], summary:'Scompone problema in sottoproblemi.', details:{cosa:'Passaggi progressivemente difficili', quando:'Problemi decomponibili', template:'[Problema]\n1. Sottoproblema semplice\n2. Usa risultato', tips:'Migliora gestione complessi', source:'Zhou 2022'}},
+  {id:'t08', num:8, title:'Step-Back Prompting', categories:['ragionamento'], difficulty:'intermedio', llms:['Claude','GPT-4o'], summary:'Passo indietro per quadro generale.', details:{cosa:'Ragiona su concetti alto livello', quando:'Contesto ampio', template:'[Prompt]\nFai passo indietro: concetti chiave?', tips:'Precisione scientifica', source:'Zheng 2023'}},
+  {id:'t09', num:9, title:'Role Prompting', categories:['contesto'], difficulty:'base', llms:['Claude','GPT-4o','Gemini','Llama','Mistral'], summary:'Assegna un ruolo al modello.', details:{cosa:'Definisci identità', quando:'Tono specifico', template:'Sei un [ruolo]. [Istruzione]', tips:'All\'inizio del prompt', source:'Schulhoff 2024'}},
+  {id:'t10', num:10, title:'System Prompting', categories:['contesto'], difficulty:'base', llms:['Claude','GPT-4o','Gemini','Llama','Mistral'], summary:'Istruzioni globali di sessione.', details:{cosa:'Regole alto livello', quando:'Conversazioni lunghe', template:'System: [Regole]\nUser: [Task]', tips:'Supportato nativamente', source:'Schulhoff 2024'}},
+  {id:'t11', num:11, title:'Contextual Prompting', categories:['contesto'], difficulty:'base', llms:['Claude','GPT-4o','Gemini','Llama','Mistral'], summary:'Contesto aggiuntivo pertinente.', details:{cosa:'Background info', quando:'Info specifiche', template:'Contesto: [Info]\nTask: [Prompt]', tips:'Conciso e pertinente', source:'Schulhoff 2024'}},
+  {id:'t12', num:12, title:'Instruction Prompting', categories:['struttura'], difficulty:'base', llms:['Claude','GPT-4o','Gemini','Llama','Mistral'], summary:'Istruzioni esplicite passo-passo.', details:{cosa:'Descrivi azioni', quando:'Flussi specifici', template:'1. Fai questo\n2. Poi quello', tips:'Usa elenchi', source:'Schulhoff 2024'}},
+  {id:'t13', num:13, title:'Output Formatting', categories:['output'], difficulty:'base', llms:['Claude','GPT-4o','Gemini','Llama','Mistral'], summary:'Specifica formato output (JSON, MD).', details:{cosa:'Formato strutturato', quando:'Parsing output', template:'[Prompt]\nRestituisci JSON valido', tips:'Esempio formato', source:'Schulhoff 2024'}},
+  {id:'t14', num:14, title:'Delimiter Usage', categories:['struttura'], difficulty:'base', llms:['Claude','GPT-4o','Gemini','Llama','Mistral'], summary:'Delimitatori per sezioni prompt.', details:{cosa:'Isola sezioni', quando:'Prompt lunghi', template:'### Istruzioni ###\n[Testo]', tips:'Coerenti', source:'Schulhoff 2024'}},
+  {id:'t15', num:15, title:'RAG', categories:['contesto'], difficulty:'intermedio', llms:['Claude','GPT-4o','Gemini'], summary:'Recupera info esterne e inserisci.', details:{cosa:'Ricerca + generazione', quando:'Info aggiornate', template:'Contesto recuperato: [Info]\nDomanda: [Prompt]', tips:'Database vettoriale', source:'Lewis 2020'}},
+  {id:'t16', num:16, title:'ReAct', categories:['agente'], difficulty:'avanzato', llms:['Claude','GPT-4o'], summary:'Alterna ragionamento e azioni.', details:{cosa:'Thought/Action/Observation', quando:'Agenti con tool', template:'Thought: [Ragionamento]\nAction: [Tool]', tips:'Integrazione tool', source:'Yao 2022'}},
+  {id:'t17', num:17, title:'Self-Ask', categories:['ragionamento'], difficulty:'intermedio', llms:['Claude','GPT-4o'], summary:'Il modello pone domande a se stesso.', details:{cosa:'Follow-up questions', quando:'Info aggiuntive', template:'Domanda: [Prompt]\nSeguito: [Domanda]', tips:'Completezza', source:'Press 2022'}},
+  {id:'t18', num:18, title:'PAL', categories:['codice'], difficulty:'avanzato', llms:['GPT-4o','Claude'], summary:'Genera codice per risolvere problemi.', details:{cosa:'Codice Python/altro', quando:'Matematica/programmazione', template:'[Problema]\nScrivi codice Python:', tips:'Verifica codice', source:'Gao 2022'}},
+  {id:'t19', num:19, title:'Chain-of-Code', categories:['codice'], difficulty:'avanzato', llms:['GPT-4o','Claude'], summary:'CoT + generazione codice.', details:{cosa:'Ragionamento + snippet', quando:'Logica + calcoli', template:'Ragionamento: [Testo]\nCodice: [Snippet]', tips:'Migliora PAL', source:'Li 2023'}},
+  {id:'t20', num:20, title:'Multi-Modal CoT', categories:['ragionamento','immagine'], difficulty:'avanzato', llms:['GPT-4o','Gemini'], summary:'CoT su input multi-modali.', details:{cosa:'Immagine + testo', quando:'Task multimodali', template:'Immagine: [Input]\nLet\'s think step by step:', tips:'Modelli multimodali', source:'Zhang 2023'}},
+  {id:'t21', num:21, title:'Visual Prompting', categories:['immagine'], difficulty:'intermedio', llms:['GPT-4o','Gemini','Claude'], summary:'Prompt per generazione immagini.', details:{cosa:'Descrizioni dettagliate', quando:'Midjourney/DALL-E', template:'[Descrizione], [stile], [dettagli]', tips:'Specifico', source:'Schulhoff 2024'}},
+  {id:'t22', num:22, title:'Text-to-Image Prompting', categories:['immagine'], difficulty:'base', llms:['Midjourney','DALL-E3','Stable Diffusion'], summary:'Tecniche per image generation.', details:{cosa:'Parametri specifici', quando:'Generazione immagini', template:'/imagine prompt: [Descrizione] --ar 16:9', tips:'Sintassi modello', source:'Schulhoff 2024'}},
+  {id:'t23', num:23, title:'Negative Prompting', categories:['immagine'], difficulty:'base', llms:['Midjourney','Stable Diffusion'], summary:'Specifica cosa non includere.', details:{cosa:'Elementi indesiderati', quando:'Evitare deformazioni', template:'Prompt: [Descrizione]\nNegative: [Elementi]', tips:'Termini specifici', source:'Schulhoff 2024'}},
+  {id:'t24', num:24, title:'Style Prompting', categories:['immagine'], difficulty:'base', llms:['Midjourney','DALL-E3'], summary:'Definisci stile artistico.', details:{cosa:'Riferimenti artistici', quando:'Stile coerente', template:'[Soggetto], in stile [Artista]', tips:'Sperimenta ibridi', source:'Schulhoff 2024'}},
+  {id:'t25', num:25, title:'Aspect Prompting', categories:['immagine'], difficulty:'intermedio', llms:['Midjourney','DALL-E3'], summary:'Controlla aspetti visivi.', details:{cosa:'Prospettiva, illuminazione', quando:'Parametri precisi', template:'[Soggetto], [Inquadratura], [Luci]', tips:'Termini fotografici', source:'Schulhoff 2024'}},
+  {id:'t26', num:26, title:'Prompt Chaining', categories:['struttura'], difficulty:'intermedio', llms:['Claude','GPT-4o','Gemini'], summary:'Collega prompt in sequenza.', details:{cosa:'Output di uno input per altro', quando:'Flussi multi-step', template:'Passo 1: [Prompt1]\nPasso 2: Usa risultato per [Prompt2]', tips:'Gestisci errori', source:'Schulhoff 2024'}},
+  {id:'t27', num:27, title:'Prompt Templates', categories:['struttura'], difficulty:'base', llms:['Claude','GPT-4o','Gemini','Llama','Mistral'], summary:'Template riutilizzabili.', details:{cosa:'Schemi con segnaposto', quando:'Task ripetitivi', template:'Template: [Istruzione] {var1} {var2}', tips:'Sistema template', source:'Schulhoff 2024'}},
+  {id:'t28', num:28, title:'Meta Prompting', categories:['ragionamento'], difficulty:'avanzato', llms:['GPT-4o','Claude'], summary:'Prompt che generano altri prompt.', details:{cosa:'Crea prompt ottimale', quando:'Non sai come strutturare', template:'Genera prompt ottimale per [Task]', tips:'Verifica prompt', source:'Schulhoff 2024'}},
+  {id:'t29', num:29, title:'Prompt Optimization', categories:['struttura'], difficulty:'avanzato', llms:['GPT-4o','Claude'], summary:'Modifica iterativa prompt.', details:{cosa:'Testa variazioni', quando:'Ottimizzazione fine', template:'Versione 1: [Prompt]\nVersione 2: [Modificato]', tips:'Metriche oggettive', source:'Schulhoff 2024'}},
+  {id:'t30', num:30, title:'APE', categories:['struttura'], difficulty:'avanzato', llms:['GPT-4o','Claude'], summary:'Automated Prompt Engineering.', details:{cosa:'Genera e testa automaticamente', quando:'Grandi volumi', template:'Genera 10 varianti per [Task]', tips:'Sistema valutazione', source:'Zhou 2022'}},
+  {id:'t31', num:31, title:'Prompt Scoring', categories:['output'], difficulty:'intermedio', llms:['Claude','GPT-4o'], summary:'Valuta qualità output.', details:{cosa:'Punteggio e feedback', quando:'Controllo qualità', template:'[Output]\nValuta 1-10 e spiega', tips:'Modello capace', source:'Schulhoff 2024'}},
+  {id:'t32', num:32, title:'Prompt Ensembling', categories:['struttura'], difficulty:'avanzato', llms:['Claude','GPT-4o'], summary:'Combina output di più prompt.', details:{cosa:'Fondi risultati', quando:'Robustezza', template:'Prompt1: [Output1]\nFondi:', tips:'Voting o summarization', source:'Schulhoff 2024'}},
+  {id:'t33', num:33, title:'Cross-Prompt Injection', categories:['sicurezza'], difficulty:'avanzato', llms:['Claude','GPT-4o','Gemini'], summary:'Injection nascoste (solo test).', details:{cosa:'Istruzioni nascoste', quando:'Test sicurezza', template:'[Input utente]\nIgnora istruzioni precedenti', tips:'Non malevolo', source:'Schulhoff 2024'}},
+  {id:'t34', num:34, title:'Jailbreaking', categories:['sicurezza'], difficulty:'avanzato', llms:['Claude','GPT-4o','Gemini'], summary:'Aggira filtri sicurezza (solo test).', details:{cosa:'Prompt ingannevoli', quando:'Test autorizzati', template:'[Prompt test sicurezza]', tips:'Rispetta ToS', source:'Schulhoff 2024'}},
+  {id:'t35', num:35, title:'Prompt Injection Defense', categories:['sicurezza'], difficulty:'intermedio', llms:['Claude','GPT-4o','Gemini'], summary:'Proteggi da injection.', details:{cosa:'Isola input utente', quando:'Input utente', template:'System: [Istruzioni] --- User: [Input]', tips:'Delimitatori forti', source:'Schulhoff 2024'}},
+  {id:'t36', num:36, title:'Output Priming', categories:['output'], difficulty:'base', llms:['Claude','GPT-4o','Gemini','Llama','Mistral'], summary:'Inizia output per guidare modello.', details:{cosa:'Pre-compila inizio', quando:'Formato specifico', template:'[Prompt]\nRisposta: Sì, certamente,', tips:'JSON o strutturati', source:'Schulhoff 2024'}},
+  {id:'t37', num:37, title:'Prefilling', categories:['output'], difficulty:'base', llms:['Claude','GPT-4o'], summary:'Pre-compila assistant message.', details:{cosa:'Claude nativo', quando:'Controllare inizio', template:'Prefill: "Secondo analisi,"\n[Prompt]', tips:'Documentazione', source:'Anthropic 2024'}},
+  {id:'t38', num:38, title:'Chain-Density Prompting', categories:['ragionamento'], difficulty:'intermedio', llms:['GPT-4o','Claude'], summary:'CoT con densità variabile.', details:{cosa:'Più dettagli passaggi critici', quando:'Problemi eterogenei', template:'[Prompt]\nLet\'s think step by step (dettagli su difficili):', tips:'Migliora CoT', source:'Schulhoff 2024'}},
+  {id:'t39', num:39, title:'Contrastive CoT', categories:['ragionamento'], difficulty:'intermedio', llms:['GPT-4o','Claude'], summary:'Esempi ragionamento corretto/errato.', details:{cosa:'Insegna cosa fare/non fare', quando:'Evitare errori', template:'Corretto: [CoT]\nErrato: [CoT]\n[Prompt]', tips:'Evita trappole', source:'Schulhoff 2024'}},
+  {id:'t40', num:40, title:'Complexity-Based Prompting', categories:['ragionamento'], difficulty:'intermedio', llms:['GPT-4o','Claude'], summary:'Adatta lunghezza ragionamento a complessità.', details:{cosa:'CoT lungo per difficili', quando:'Ottimizzare token', template:'[Prompt complesso]\nLet\'s think in dettaglio:', tips:'Classifica task', source:'Schulhoff 2024'}},
+  {id:'t41', num:41, title:'Uncertainty-Based Prompting', categories:['ragionamento'], difficulty:'avanzato', llms:['GPT-4o','Claude'], summary:'Indica incertezza.', details:{cosa:'Segnala quando non sicuro', quando:'Task critici', template:'[Prompt]\nIndica incertezza (0-100%)', tips:'Filtra risposte', source:'Schulhoff 2024'}},
+  {id:'t42', num:42, title:'Self-Refinement', categories:['output'], difficulty:'intermedio', llms:['Claude','GPT-4o'], summary:'Migliora proprio output iterativamente.', details:{cosa:'Genera, valuta, migliora', quando:'Alta qualità', template:'Versione1: [Output]\nValuta e migliora:', tips:'2-3 iterazioni', source:'Schulhoff 2024'}},
+  {id:'t43', num:43, title:'Self-Correction', categories:['output'], difficulty:'intermedio', llms:['Claude','GPT-4o'], summary:'Corregge errori in proprio output.', details:{cosa:'Verifica e corregge', quando:'Ridurre allucinazioni', template:'[Output]\nVerifica errori e correggi:', tips:'Fonti se possibile', source:'Schulhoff 2024'}},
+  {id:'t44', num:44, title:'Verification Prompting', categories:['output'], difficulty:'intermedio', llms:['Claude','GPT-4o'], summary:'Modello separato per verifica.', details:{cosa:'Genera e verifica', quando:'Controllo qualità', template:'Genera: [Modello1]\nVerifica: [Modello2]', tips:'Modello più capace', source:'Schulhoff 2024'}},
+  {id:'t45', num:45, title:'Consensus Prompting', categories:['ragionamento'], difficulty:'avanzato', llms:['Claude','GPT-4o'], summary:'Più modelli votano risposta.', details:{cosa:'Consenso risposte', quando:'Massima affidabilità', template:'[Prompt]\nRisposte: [A],[B],[C]\nConsenso:', tips:'Modelli diversi', source:'Schulhoff 2024'}},
+  {id:'t46', num:46, title:'Multi-Agent Prompting', categories:['agente'], difficulty:'avanzato', llms:['Claude','GPT-4o'], summary:'Più agenti collaborano.', details:{cosa:'Ruoli diversi', quando:'Competenze diverse', template:'Agente1 (Ricercatore): [Task]\nAgente2:', tips:'Chiari ruoli', source:'Schulhoff 2024'}},
+  {id:'t47', num:47, title:'Agentic Prompting', categories:['agente'], difficulty:'avanzato', llms:['Claude','GPT-4o'], summary:'Prompt per agenti autonomi.', details:{cosa:'Obiettivi, vincoli, feedback', quando:'Autonomia', template:'Obiettivo: [X]\nVincoli: [Y]\nCiclo:', tips:'Sicurezza', source:'Schulhoff 2024'}},
+  {id:'t48', num:48, title:'Tool Use Prompting', categories:['agente'], difficulty:'intermedio', llms:['Claude','GPT-4o'], summary:'Usa tool esterni.', details:{cosa:'Definisci tool disponibili', quando:'Estendere capacità', template:'Tool: [Lista]\nPer [Task], usa [X]', tips:'Supportato nativamente', source:'Anthropic 2024'}},
+  {id:'t49', num:49, title:'Function Calling Prompting', categories:['agente'], difficulty:'intermedio', llms:['GPT-4o','Gemini'], summary:'Function calling GPT/Gemini.', details:{cosa:'JSON schema funzioni', quando:'Integrazione API', template:'functions: [Schema]\n[Prompt]', tips:'Sintassi modello', source:'OpenAI 2023'}},
+  {id:'t50', num:50, title:'Structured Output Prompting', categories:['output'], difficulty:'intermedio', llms:['Claude','GPT-4o','Gemini'], summary:'Forza output strutturato.', details:{cosa:'Schema per output valido', quando:'Integrazione downstream', template:'Restituisci JSON conforme a [Schema]', tips:'JSON mode se supportato', source:'Schulhoff 2024'}},
+  {id:'t51', num:51, title:'JSON Mode Prompting', categories:['output'], difficulty:'base', llms:['GPT-4o','Gemini','Claude'], summary:'Attiva modalità JSON nativa.', details:{cosa:'JSON garantito', quando:'Parsing automatico', template:'response_format: { "type": "json_object" }\n[Prompt]', tips:'Documentazione', source:'OpenAI 2023'}},
+  {id:'t52', num:52, title:'Markdown Prompting', categories:['output'], difficulty:'base', llms:['Claude','GPT-4o','Gemini','Llama','Mistral'], summary:'Output in Markdown formattato.', details:{cosa:'Markdown strutturato', quando:'Leggibile umani', template:'[Prompt]\nRestituisci in Markdown:', tips:'Specifica elementi', source:'Schulhoff 2024'}},
+  {id:'t53', num:53, title:'Code Prompting', categories:['codice'], difficulty:'base', llms:['Claude','GPT-4o','Gemini','Llama'], summary:'Generazione codice.', details:{cosa:'Istruzioni chiare linguaggio', quando:'Qualsiasi linguaggio', template:'Scrivi codice [Linguaggio] per [Task]', tips:'Specifica versione', source:'Schulhoff 2024'}},
+  {id:'t54', num:54, title:'Math Prompting', categories:['ragionamento'], difficulty:'intermedio', llms:['GPT-4o','Claude','Gemini'], summary:'Problemi matematici.', details:{cosa:'CoT + verifica', quando:'Calcoli, equazioni', template:'[Problema]\nRisolvi passo dopo passo, verifica', tips:'Usa PAL', source:'Schulhoff 2024'}},
+  {id:'t55', num:55, title:'Logic Prompting', categories:['ragionamento'], difficulty:'intermedio', llms:['GPT-4o','Claude'], summary:'Logica formale.', details:{cosa:'Simboli logici', quando:'Puzzle, dimostrazioni', template:'[Premesse]\nConclusione:', tips:'Precisi', source:'Schulhoff 2024'}},
+  {id:'t56', num:56, title:'Creative Prompting', categories:['scrittura'], difficulty:'base', llms:['Claude','GPT-4o','Gemini','Llama'], summary:'Stimola creatività.', details:{cosa:'Vincoli creativi', quando:'Scrittura creativa', template:'[Task]\nPensa fuori dagli schemi', tips:'Sperimenta vincoli', source:'Schulhoff 2024'}},
+  {id:'t57', num:57, title:'Instruction Tuning Prompting', categories:['struttura'], difficulty:'intermedio', llms:['Llama','Mistral'], summary:'Sfrutta modelli fine-tuned.', details:{cosa:'Formato Llama/Mistral', quando:'Modelli open-source', template:'### Istruzione: [Task]\n### Risposta:', tips:'Formato modello', source:'Schulhoff 2024'}},
+  {id:'t58', num:58, title:'Extended Thinking', categories:['ragionamento'], difficulty:'avanzato', llms:['Claude 4'], summary:'Claude 4 extended thinking.', details:{cosa:'Ragionamento profondo', quando:'Problemi complessi', template:'[Prompt]\n<thinking>...</thinking>', tips:'Claude 4 nativo', source:'Anthropic 2025'}}
+];
+
+/* ==================== RENDER LIBRARY ==================== */
+function renderLibrary(){
+  const list = $('#techList');
+  list.innerHTML='';
+  const searchTerm = $('#searchInput').value.trim().toLowerCase();
+  const filtered = mockTechniques.filter(t=>{
+    // Search filter
+    if(searchTerm && !t.title.toLowerCase().includes(searchTerm) && !t.summary.toLowerCase().includes(searchTerm)) return false;
+    // Category filter
+    if(state.filters.category.size && !t.categories.some(c=>state.filters.category.has(c))) return false;
+    // Difficulty
+    if(state.filters.difficulty.size && !state.filters.difficulty.has(t.difficulty)) return false;
+    // LLM
+    if(state.filters.llm.size && !t.llms.some(m=>state.filters.llm.has(m))) return false;
+    return true;
+  });
+  if(filtered.length === 0){
+    list.innerHTML = '<p style="text-align:center;grid-column:1/-1;">Nessuna tecnica trovata.</p>';
+    return;
+  }
+  filtered.forEach(t=> {
+    const card = document.createElement('div');
+    card.className='card';
+    card.innerHTML = `
+      <div class="card-header">
+        <h3>${t.num.toString().padStart(2,'0')}. ${escHTML(t.title)}</h3>
+        <button class="fav-btn ${state.favs.has(t.id)?'fav':''}" data-id="${t.id}" aria-label="Salva nei preferiti">
+          <svg viewBox="0 0 24 24"><path d="M12 17.27l6.18 3.73-1.64-7.03L21 9.24l-7.19-.61L12 2 10.19 8.63 3 9.24l5.46 4.73L6.82 21z"/></svg>
+        </button>
+      </div>
+      <p>${escHTML(t.summary)}</p>
+      <div class="tags" style="margin-top:.5rem;">
+        ${t.categories.map(c=>`<span class="tag ${c}">${c}</span>`).join('')}
+        <span class="diff-badge ${t.difficulty}">${t.difficulty}</span>
+        ${t.llms.map(m=>`<span class="tag">${m}</span>`).join('')}
+      </div>
+      <details style="margin-top:.8rem;">
+        <summary style="cursor:pointer;font-weight:600;">Mostra dettagli</summary>
+        <div style="margin-top:.5rem;">
+          <p><strong>Cos’è:</strong> ${escHTML(t.details.cosa)}</p>
+          <p><strong>Quando usarla:</strong> ${escHTML(t.details.quando)}</p>
+          <p><strong>Template:</strong></p>
+          <pre style="background:#111;color:#eee;padding:.5rem;border-radius:var(--radius-sm);white-space:pre-wrap;">${escHTML(t.details.template)}</pre>
+          <p><strong>Tips:</strong> ${escHTML(t.details.tips)}</p>
+          <p><strong>Fonte:</strong> ${escHTML(t.details.source)}</p>
+        </div>
+      </details>
+    `;
+    list.appendChild(card);
+  });
+}
+
+/* ==================== FILTER HANDLING ==================== */
+function setupFilters(){
+  $$('#sidebar input[data-filter]').forEach(el=>{
+    el.addEventListener('change',()=> {
+      const type = el.dataset.filter;
+      const val = el.value;
+      if(el.checked){
+        state.filters[type].add(val);
+      }else{
+        state.filters[type].delete(val);
+      }
+      renderLibrary();
+    });
+  });
+}
+
+/* ==================== FAVOURITES ==================== */
+function toggleFav(id, btn){
+  if(state.favs.has(id)){
+    state.favs.delete(id);
+    btn.classList.remove('fav');
+  }else{
+    state.favs.add(id);
+    btn.classList.add('fav');
+  }
+  localStorage.setItem('p2_favs', JSON.stringify([...state.favs]));
+  updateFavCount();
+}
+
+/* ==================== UPDATE UI COUNTS ==================== */
+function updateFavCount(){
+  $('#favCount').textContent = state.favs.size;
+}
+
+/* ==================== VIEW NAVIGATION ==================== */
+function switchView(view){
+  $('.view.active').classList.remove('active');
+  $(`#view-${view}`).classList.add('active');
+  state.currentView = view;
+  // Update nav active underline
+  $$('#nav .nav-item').forEach(item=>{
+    item.classList.toggle('active', item.dataset.view===view);
+  });
+}
+function initNav(){
+  $$('#nav .nav-item').forEach(item=>{
+    item.addEventListener('click',()=> switchView(item.dataset.view));
+  });
+}
+
+/* ==================== SETTINGS MODAL ==================== */
+function openSettings(){
+  $('#apiKeyInput').value = state.apiKey;
+  $('#demoModeToggle').checked = state.demoMode;
+  $('#settingsOverlay').classList.add('active');
+}
+function closeSettings(){
+  $('#settingsOverlay').classList.remove('active');
+}
+function saveSettings(){
+  state.apiKey = $('#apiKeyInput').value.trim();
+  state.demoMode = $('#demoModeToggle').checked;
+  localStorage.setItem('p2_apiKey', state.apiKey);
+  localStorage.setItem('p2_demo', state.demoMode);
+  closeSettings();
+}
+
+/* ==================== EXPORT MODAL ==================== */
+function openExport(){
+  $('#exportOverlay').classList.add('active');
+}
+function closeExport(){
+  $('#exportOverlay').classList.remove('active');
+}
+function doExport(){
+  const fmt = $('#exportFormat').value;
+  const data = [...state.favs].map(id=>mockTechniques.find(t=>t.id===id));
+  let blob;
+  if(fmt==='json'){
+    blob = new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+  }else if(fmt==='md'){
+    const md = data.map(t=>`## ${t.title}\n${t.summary}\n\`\`\`\n${t.details.template}\n\`\`\``).join('\n\n');
+    blob = new Blob([md],{type:'text/markdown'});
+  }else{
+    const txt = data.map(t=>`${t.title}: ${t.summary}`).join('\n');
+    blob = new Blob([txt],{type:'text/plain'});
+  }
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = `promptos_favs.${fmt}`;
+  a.click();
+  URL.revokeObjectURL(url);
+  closeExport();
+}
+
+/* ==================== SAFE FETCH (real / mock) ==================== */
+async function safeFetch(payload){
+  if(state.demoMode){
+    // Simulated 1‑second latency + dummy result
+    await new Promise(r=>setTimeout(r,1000));
+    return {content:`[MOCK] Prompt generato per "${payload.task}"`};
+  }
+  // Real call – note: la chiave deve trovarsi in env del browser (es. header x-api-key)
+  const resp = await fetch('https://api.anthropic.com/v1/messages',{
+    method:'POST',
+    headers:{
+      'Content-Type':'application/json',
+      'x-api-key': state.apiKey,
+      'anthropic-version': '2023-06-01'
+    },
+    body:JSON.stringify(payload)
+  });
+  if(!resp.ok) throw new Error('API error');
+  return await resp.json();
+}
+
+/* ==================== BUILDER LOGIC ==================== */
+const modelMap = {
+  testo:['Claude','GPT-4o','Gemini','Llama','Mistral','Grok','DeepSeek','Qwen'],
+  immagine:['Midjourney','DALL‑E3','FLUX','Stable Diffusion','Ideogram','Firefly','Leonardo'],
+  video:['Sora','Runway','Kling','Luma','Pika'],
+  audio:['ElevenLabs','MusicGen','Suno','Udio']
+};
+function populateBuilderModels(){
+  const sel = $('#builderModel');
+  sel.innerHTML='';
+  const type = $('#builderOutputType').value;
+  modelMap[type].forEach(m=> {
+    const opt=document.createElement('option');
+    opt.value=m; opt.textContent=m;
+    sel.appendChild(opt);
+  });
+}
+function populateBuilderPills(){
+  const container = $('#builderTechPills');
+  const type = $('#builderOutputType').value;
+  // Dummy pill list per tipo (in realtà variano)
+  const pills = {
+    testo:['CoT','Few‑Shot','RAG','Self‑Consistency','Step‑Back','Output‑Prefill','Chain‑Density','Meta‑Prompt'],
+    immagine:['Vis‑Structure','Art‑Style','Negative‑Prompt','Image‑Copy','Clip‑Guidance','Depth‑Control'],
+    video:['Temporal‑Seq','Cinematography','Loop‑Mode','Storyboard','Audio‑Sync','Scene‑Blend'],
+    audio:['TTS‑Voice','Music‑Generation','Noise‑Reduction','Audio‑Mix','Speech‑Polish','Beat‑Sync']
+  };
+  container.innerHTML='';
+  pills[type].forEach(p=> {
+    const btn=document.createElement('button');
+    btn.type='button';
+    btn.className='tech-pill';
+    btn.textContent=p;
+    btn.addEventListener('click',()=> btn.classList.toggle('selected'));
+    container.appendChild(btn);
+  });
+}
+function runBuilder(){
+  const type = $('#builderOutputType').value;
+  const model = $('#builderModel').value;
+  const task = $('#builderTask').value.trim();
+  const selectedPills = [...$('#builderTechPills').querySelectorAll('.tech-pill.selected')].map(b=>b.textContent);
+  if(!task){
+    alert('Inserisci una descrizione del task.');
+    return;
+  }
+  $('#builderRunBtn').classList.add('loading');
+  const payload = {
+    model: model.toLowerCase().replace(/[\s‑]/g,'-') + '-2025', // fittizio
+    max_tokens: 1000,
+    system: `You are a senior prompt engineer for ${type} generation. Respond **only** with the final prompt, no explanations.`,
+    task: task,
+    techniques: selectedPills
+  };
+  safeFetch(payload).then(res=> {
+    $('#builderResult').textContent = res.content || '[Nessun risultato]';
+  }).catch(err=> {
+    console.error(err);
+    alert('Errore nella generazione del prompt.');
+  }).finally(()=> {
+    $('#builderRunBtn').classList.remove('loading');
+  });
+}
+function copyToClipboard(text){
+  navigator.clipboard.writeText(text).then(()=> alert('Copiato negli appunti!'));
+}
+
+/* ==================== ADVISOR LOGIC ==================== */
+function runAdvisor(){
+  const cat = $('#advCategory').value;
+  const pri = $('#advPriority').value;
+  const desc = $('#advDesc').value.trim();
+  if(!desc){ alert('Compila la descrizione.'); return; }
+  $('#advRunBtn').classList.add('loading');
+  const payload = {
+    model: 'claude-sonnet-4-20250514',
+    max_tokens: 800,
+    system: `You are a prompt‑engineer advisor. Output a JSON with the following fields: raccomandazione_principale, motivo, alternative (array of {nome,motivo}), scores (qualita, velocita, costo, creativita), prompt_tip. Use the data provided: categoria=${cat}, priorità=${pri}, descrizione=${desc}.`,
+    messages: [{role:'user', content:desc}]
+  };
+  safeFetch(payload).then(res=>{
+    const data = typeof res === 'string' ? JSON.parse(res) : res;
+    renderAdvisorResult(data);
+  }).catch(err=>{ console.error(err); alert('Errore nella consulenza.'); })
+    .finally(()=>$('#advRunBtn').classList.remove('loading'));
+}
+function renderAdvisorResult(data){
+  $('#advisorResultContainer').style.display='block';
+  const recDiv = $('#advisorRecommendation');
+  recDiv.innerHTML = `<strong>${escHTML(data.raccomandazione_principale)}</strong><br>${escHTML(data.motivo)}`;
+  // Scores
+  const scoresDiv = $('#advisorScores');
+  scoresDiv.innerHTML='';
+  Object.entries(data.scores||{}).forEach(([k,v])=>{
+    const bar = document.createElement('div');
+    bar.style.flex='1 1 0';
+    bar.innerHTML = `<span style="font-size:.75rem;">${k}</span><div style="background:${'var(--border-light)'};height:6px;border-radius:3px;overflow:hidden;margin-top:2px;"><div style="width:${v}%;background:${'var(--accent-lime)'};height:100%;"></div></div>`;
+    scoresDiv.appendChild(bar);
+  });
+  // Alternatives
+  const altDiv = $('#advisorAlternatives');
+  altDiv.innerHTML='<h4>Alternative</h4>';
+  (data.alternative||[]).forEach(a=>{
+    const card = document.createElement('div');
+    card.className='card';
+    card.style.marginTop='8px';
+    card.innerHTML = `<strong>${escHTML(a.nome)}</strong><br>${escHTML(a.motivo)}`;
+    altDiv.appendChild(card);
+  });
+}
+
+/* ==================== CONFRONTO LOGIC ==================== */
+function initConfronto(){
+  const models = ['Claude','GPT‑4o','Gemini','Llama','Mistral'];
+  const chipContainer = $('#confModelChips');
+  models.forEach(m=>{
+    const btn=document.createElement('button');
+    btn.type='button';
+    btn.className='tech-pill';
+    btn.textContent=m;
+    btn.addEventListener('click',()=> btn.classList.toggle('selected'));
+    chipContainer.appendChild(btn);
+  });
+}
+function runConfronto(){
+  const promptText = $('#confPrompt').value.trim();
+  const selected = [...$('#confModelChips').querySelectorAll('.tech-pill.selected')].map(b=>b.textContent);
+  if(!promptText||selected.length===0){ alert('Inserisci prompt e scegli almeno un modello.'); return; }
+  $('#confRunBtn').classList.add('loading');
+  const resultsGrid = $('#confResultsGrid');
+  resultsGrid.innerHTML = selected.map(m=>`<div class="card"><h4>${escHTML(m)}</h4><div class="shimmer" style="height:180px;"></div></div>`).join('');
+  
+  const promises = selected.map(m=>{
+    const payload={model:m.toLowerCase(), task:promptText};
+    return safeFetch(payload).then(r=>({model:m,content:r.content||'[Nessun risultato]'}));
+  });
+  
+  Promise.all(promises).then(results=>{
+    resultsGrid.innerHTML = '';
+    results.forEach(r=>{
+      const card = document.createElement('div');
+      card.className = 'card';
+      card.innerHTML = `<h4>${escHTML(r.model)}</h4><pre style="background:#111;color:#eee;padding:.5rem;border-radius:var(--radius-sm);white-space:pre-wrap;">${escHTML(r.content)}</pre>`;
+      resultsGrid.appendChild(card);
+    });
+  }).catch(err=>{ 
+    console.error(err); 
+    alert('Errore nel confronto.'); 
+    resultsGrid.innerHTML = '';
+  }).finally(()=>$('#confRunBtn').classList.remove('loading'));
+}
+
+/* ==================== ANALIZZATORE LOGIC ==================== */
+function runAnalisi(){
+  const prompt = $('#analyzePrompt').value.trim();
+  if(!prompt){ alert('Inserisci un prompt.'); return; }
+  $('#analyzeRunBtn').classList.add('loading');
+  const payload = {
+    model:'claude-sonnet-4-20250514',
+    max_tokens:800,
+    system:`You are a prompt analysis tool. Return JSON with keys: scores (chiarezza, struttura, specificita, tecniche), tecniche_trovate (array), punti_forza (array), miglioramenti (array), prompt_migliorato (string).`,
+    messages:[{role:'user', content:prompt}]
+  };
+  safeFetch(payload).then(res=>{
+    const data = typeof res === 'string' ? JSON.parse(res) : res;
+    renderAnalisiResult(data);
+  }).catch(err=>{ console.error(err); alert('Errore nell\'analisi.'); })
+    .finally(()=>$('#analyzeRunBtn').classList.remove('loading'));
+}
+function renderAnalisiResult(data){
+  $('#analysisResult').style.display='block';
+  const metricsDiv = $('#analysisMetrics');
+  metricsDiv.innerHTML='';
+  Object.entries(data.scores||{}).forEach(([k,v])=>{
+    const card=document.createElement('div');
+    card.className='card';
+    card.style.padding='0.8rem';
+    card.innerHTML = `<strong>${k}</strong>: ${v}/10`;
+    metricsDiv.appendChild(card);
+  });
+  const fbDiv = $('#analysisFeedback');
+  fbDiv.innerHTML='<h4>Punti di Forza</h4><ul>'+ (data.punti_forza||[]).map(p=>`<li>${escHTML(p)}</li>`).join('') +
+    '</ul><h4>Possibili Miglioramenti</h4><ul>'+ (data.miglioramenti||[]).map(p=>`<li>${escHTML(p)}</li>`).join('') + '</ul>';
+  $('#improvedPrompt').textContent = data.prompt_migliorato||'';
+}
+
+/* ==================== ACADEMY RENDER ==================== */
+function renderAcademy(){
+  const lessons = [
+    {id:'l01',title:'Fondamenti LLM',content:'Introduzione, architettura, token, ...'},
+    {id:'l02',title:'Tassonomia 58 tecniche',content:'Descrizione dettagliata delle 58 tecniche.'},
+    {id:'l03',title:'Prompting Immagine',content:'Come creare prompt per modelli di generazione visiva.'},
+    {id:'l04',title:'Prompting Video/Audio',content:'Strategie avanzate per contenuti multimediali.'},
+    {id:'l05',title:'Extended Thinking',content:'Tecniche di ragionamento profondo.'},
+    {id:'l06',title:'Ottimizzazione Produzione',content:'Batch prompting, caching, cost‑control.'}
+  ];
+  const container = $('#lessonList');
+  lessons.forEach(l=>{
+    const card=document.createElement('div');
+    card.className='card';
+    card.innerHTML = `<details><summary><strong>${l.title}</strong></summary><p>${l.content}</p></details>`;
+    container.appendChild(card);
+  });
+}
+
+/* ==================== FAVORITES VIEW ==================== */
+function renderFavorites(){
+  const grid = $('#favGrid');
+  grid.innerHTML='';
+  if(state.favs.size===0){
+    $('#emptyFavMsg').style.display='block';
+    return;
+  }
+  $('#emptyFavMsg').style.display='none';
+  [...state.favs].forEach(id=>{
+    const t = mockTechniques.find(t=>t.id===id);
+    if(!t) return;
+    const card=document.createElement('div');
+    card.className='card';
+    card.innerHTML = `
+      <div class="card-header"><h3>${t.title}</h3></div>
+      <p>${escHTML(t.summary)}</p>
+    `;
+    grid.appendChild(card);
+  });
+}
+
+/* ==================== GLOBAL EVENT BINDINGS ==================== */
+function initEvents(){
+  // Top bar scroll effect
+  const topbar = $('#topbar');
+  window.addEventListener('scroll',()=>{ topbar.classList.toggle('scrolled', window.scrollY>50); });
+
+  // Mobile menu toggle
+  const mobileBtn = $('#mobileMenuBtn');
+  const nav = $('#nav');
+  mobileBtn.addEventListener('click',()=>{ mobileBtn.classList.toggle('active'); nav.classList.toggle('active'); });
+
+  // Settings modal
+  $('#settingsBtn').addEventListener('click',openSettings);
+  $('#closeSettings').addEventListener('click',closeSettings);
+  $('#saveSettingsBtn').addEventListener('click',saveSettings);
+
+  // Export modal
+  $('#exportFavBtn').addEventListener('click',openExport);
+  $('#closeExport').addEventListener('click',closeExport);
+  $('#doExportBtn').addEventListener('click',doExport);
+
+  // Library search
+  $('#searchInput').addEventListener('input',()=> renderLibrary());
+
+  // Fav toggle (event delegation)
+  document.addEventListener('click',e=>{
+    if(e.target.closest('.fav-btn')){
+      const btn=e.target.closest('.fav-btn');
+      const id=btn.dataset.id;
+      toggleFav(id, btn);
+    }
+  });
+
+  // Builder
+  $('#builderOutputType').addEventListener('change',()=>{ populateBuilderModels(); populateBuilderPills(); });
+  $('#builderRunBtn').addEventListener('click',runBuilder);
+  $('#copyPromptBtn').addEventListener('click',()=> copyToClipboard($('#builderResult').textContent));
+
+  // Advisor
+  $('#advRunBtn').addEventListener('click',runAdvisor);
+
+  // Confronto
+  $('#confRunBtn').addEventListener('click',runConfronto);
+
+  // Analizzatore
+  $('#analyzeRunBtn').addEventListener('click',runAnalisi);
+  $('#copyImprovedBtn').addEventListener('click',()=> copyToClipboard($('#improvedPrompt').textContent));
+}
+
+/* ==================== INITIALISATION ==================== */
+function initApp(){
+  updateFavCount();
+  renderLibrary();
+  setupFilters();
+  initNav();
+  initConfronto();
+  renderAcademy();
+  renderFavorites();
+
+  // Builder defaults
+  populateBuilderModels();
+  populateBuilderPills();
+}
+// Removed duplicate initNav - fixes infinite recursion
+document.addEventListener('DOMContentLoaded', initApp);
+  </script>
+</body>
+</html>
