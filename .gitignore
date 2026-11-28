@@ -5,3 +5,20 @@ node_modules/
 .idea/
 .vscode/
 *.tmp
+
+# Secrets and local environment
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+*.keystore
+*.jks
+*.tfvars
+.dev.vars
+credentials*.json
+service-account*.json
+.secrets/
+.claude/settings.local.json
